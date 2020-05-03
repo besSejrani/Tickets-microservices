@@ -1,0 +1,18 @@
+apiVersion: skaffold/v2alpha3
+kind: Config
+deploy:
+  kubectl:
+    manifests:
+      - ./K8S/*
+build:
+  local:
+    push: true
+  artifacts:
+    - image: bes1815/ticket-auth
+      context: services/auth
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "src/**/*.ts"
+            dest: .
