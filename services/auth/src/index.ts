@@ -10,6 +10,9 @@ require("express-async-errors");
 import { errorHandler } from "./middlewares/error";
 import { NotFoundError } from "./class/errors/notFound";
 
+import { connection } from "./model/db";
+connection();
+
 const app = express();
 
 app.use(json());
