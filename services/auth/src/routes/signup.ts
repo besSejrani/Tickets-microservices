@@ -1,7 +1,13 @@
-import express, { Request, Response } from "express";
-import { check, validationResult } from "express-validator";
-import { DatabaseConnectionError } from "../class/errors/databaseConnection";
-import { RequestValidationError } from "../class/errors/requestValidation";
+import express, { Request, Response, NextFunction } from "express";
+import { User } from "../model/user";
+
+import jwt from "jsonwebtoken";
+
+import { check } from "express-validator";
+import { BadRequestError } from "../class/errors/badRequest";
+
+// Middlewares
+import { validation } from "../middlewares/validation";
 
 const router = express.Router();
 
@@ -11,17 +17,39 @@ router.post(
     check("email", "Please enter a valid email").isEmail().isLength({ min: 4, max: 20 }),
     check("password", "Please enter a valid password").trim().isLength({ min: 4, max: 20 })
   ],
-  (req: Request, res: Response) => {
-    const errors = validationResult(req);
+  validation,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email, password } = req.body;
 
-    if (!errors.isEmpty()) {
-      throw new RequestValidationError(errors.array());
+      const user = await User.findOne({ email });
+
+      if (user) {
+        next(new BadRequestError("Email in use"));
+      }
+
+      const newUser = User.build({ email, password });
+      await newUser.save();
+
+      // Generate JWT
+      const userJwt = jwt.sign(
+        {
+          id: newUser.id,
+          email: newUser.email
+        },
+        process.env.JWT_SECRET!
+      );
+
+      // Store it on session object
+      req.session = {
+        jwt: userJwt
+      };
+
+      res.status(201).send(newUser);
+    } catch (error) {
+      console.log(error.message);
+      new BadRequestError("Internal error");
     }
-
-    throw new DatabaseConnectionError();
-
-    const { email, password } = req.body;
-    res.json({ email, password });
   }
 );
 

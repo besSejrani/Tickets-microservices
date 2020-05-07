@@ -3,10 +3,10 @@ import { CustomError } from "../class/errors/customError";
 
 export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof CustomError) {
-    return res.status(err.statusCode).json({ errors: err.serializeErrors() });
+    return res.status(err.statusCode).send({ errors: err.serializeErrors() });
   }
 
-  res.status(400).json({
+  res.status(400).send({
     errors: [{ message: "something went wrong" }]
   });
 };

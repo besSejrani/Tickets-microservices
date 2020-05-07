@@ -55,6 +55,13 @@ spec:
           image: bes1815/ticket-auth
           ports:
             - containerPort: 3000
+          env:
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: mysecret
+                  key: JWT_SECRET
+
 ---
 # AUTH SERVICE
 apiVersion: v1
